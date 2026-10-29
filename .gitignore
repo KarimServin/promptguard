@@ -1,0 +1,13 @@
+.gradle/
+build/
+.idea/
+*.iml
+.vscode/
+out/
+
+### Office / herramientas ###
+~$*
+__pycache__/
+node_modules/
+bin/
+.env

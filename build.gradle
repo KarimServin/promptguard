@@ -1,0 +1,75 @@
+plugins {
+	id 'java-library'
+	id 'org.springframework.boot' version '4.1.1'
+	id 'io.spring.dependency-management' version '1.1.7'
+	id 'maven-publish'
+}
+
+group = 'ar.edu.utn.frsf'
+version = '0.1.0-SNAPSHOT'
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(21)
+	}
+	withSourcesJar()
+}
+
+repositories {
+	mavenCentral()
+}
+
+ext {
+	set('springAiVersion', "2.0.1")
+}
+
+dependencies {
+	// Versiones explícitas en la metadata publicada (el plugin de dependency-management no las escribe).
+	api platform('org.springframework.boot:spring-boot-dependencies:4.1.1')
+	api platform('org.springframework.ai:spring-ai-bom:2.0.1')
+
+	api 'org.springframework.boot:spring-boot-autoconfigure'
+	api 'org.springframework.ai:spring-ai-model'
+	api 'org.springframework.ai:spring-ai-client-chat'
+	api 'org.springframework.ai:spring-ai-commons'
+	implementation 'tools.jackson.core:jackson-databind'
+	implementation 'org.slf4j:slf4j-api'
+	annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'org.springframework.boot:spring-boot-test'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+dependencyManagement {
+	imports {
+		mavenBom "org.springframework.ai:spring-ai-bom:${springAiVersion}"
+	}
+}
+
+// Es una librería (starter), no una aplicación ejecutable.
+tasks.named('bootJar') {
+	enabled = false
+}
+tasks.named('jar') {
+	enabled = true
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}
+
+publishing {
+	publications {
+		mavenJava(MavenPublication) {
+			from components.java
+		}
+	}
+}
+
+// Re-evaluación de corridas en modo sombra sin llamar al modelo (ver ReplayAblacion).
+tasks.register('replay', JavaExec) {
+	classpath = sourceSets.test.runtimeClasspath
+	mainClass = 'ar.edu.utn.frsf.promptguard.spring.ReplayAblacion'
+	jvmArgs '-Dfile.encoding=UTF-8', '-Dstdout.encoding=UTF-8'
+}
